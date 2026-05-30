@@ -1,0 +1,17 @@
+# Project place file
+/Behavior.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+sourcemap.json
+/ModuxWatcher/node_modules
+/Packages
+/.obsidian
+/.obsidian
+/.vscode
+/Anotações
+/ServerPackages
+watch.bat
+watch.ps1
