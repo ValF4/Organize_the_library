@@ -4,108 +4,334 @@
 
 --> MODES AND TYPES
 export type Mode = "Singleton" | "Transient"
-export type Type = "Service" | "Controller" | "Component"
+export type Type = "Service" | "Controller" | "Component" | "Mixin"
+export type TickRate = number
 
---> EXTRA TYPES (synced from ExtraTypes.luau)
-local ExtraTypes = require(script.Parent.ExtraTypes)
-export type callbackZone = ExtraTypes.callbackZone
-export type PromiseLike = ExtraTypes.PromiseLike
-export type R6 = ExtraTypes.R6
-export type R15 = ExtraTypes.R15
-export type Inventory = ExtraTypes.Inventory
-export type DataTemplate = ExtraTypes.DataTemplate
-export type PlayerZoneConfig = ExtraTypes.PlayerZoneConfig
-export type DataTemplateKey = ExtraTypes.DataTemplateKey
-export type DataKeyPayload = ExtraTypes.DataKeyPayload
+--> REACHABLE PROJECT TYPES (generated statically)
+export type DataTemplate = {
+	Cash: number,
+	MusicVolume: number,
+	SoundVolume: number,
+	MusicEnabled: boolean,
+	SoundEnabled: boolean,
+}
+export type DataTemplateKey = "Cash" | "MusicVolume" | "SoundVolume" | "MusicEnabled" | "SoundEnabled"
+export type DataKeyPayload =
+	{ key: "Cash", Cash: number }
+	| { key: "MusicVolume", MusicVolume: number }
+	| { key: "SoundVolume", SoundVolume: number }
+	| { key: "MusicEnabled", MusicEnabled: boolean }
+	| { key: "SoundEnabled", SoundEnabled: boolean }
+export type BookThemes = "Romance" | "Action" | "Physic" | "Comedy"
+export type Books = {
+    Id: string,
+    Title: string,
+    Theme: BookThemes, -- Futuramente aqui será os temas
+    Chapter: number,
+    TotalChapters: number
+}
+export type Book = BooksTypesModule.Books
+export type Difficults = {
+    Easy: string,
+    Medium: string,
+    Hard: string
+}
+export type R6 = {
+	Head: {
+		Mesh: SpecialMesh,
+		face: Decal,
+		HairAttachment: Attachment,
+		HatAttachment: Attachment,
+		FaceFrontAttachment: Attachment,
+		FaceCenterAttachment: Attachment,
+	} & Part,
+	Torso: {
+		roblox: Decal,
+		NeckAttachment: Attachment,
+		BodyFrontAttachment: Attachment,
+		BodyBackAttachment: Attachment,
+		LeftCollarAttachment: Attachment,
+		RightCollarAttachment: Attachment,
+		WaistFrontAttachment: Attachment,
+		WaistCenterAttachment: Attachment,
+		WaistBackAttachment: Attachment,
+		Right_Shoulder: Motor6D,
+		Left_Shoulder: Motor6D,
+		Right_Hip: Motor6D,
+		Left_Hip: Motor6D,
+		Neck: Motor6D,
+	} & Part,
+	Left_Arm: {
+		LeftShoulderAttachment: Attachment,
+		LeftGripAttachment: Attachment,
+	} & Part,
+	Right_Arm: {
+		RightShoulderAttachment: Attachment,
+		RightGripAttachment: Attachment,
+	} & Part,
+	Left_Leg: {
+		LeftFootAttachment: Attachment,
+	} & Part,
+	Right_Leg: {
+		RightFootAttachment: Attachment,
+	} & Part,
+	Humanoid: {
+		Status: Status,
+		Animator: Animator,
+		HumanoidDescription: {
+			BodyPartDescription_1: BodyPartDescription,
+			BodyPartDescription_2: BodyPartDescription,
+			BodyPartDescription_3: BodyPartDescription,
+			BodyPartDescription_4: BodyPartDescription,
+			BodyPartDescription_5: BodyPartDescription,
+			BodyPartDescription_6: BodyPartDescription,
+		} & HumanoidDescription,
+	} & Humanoid,
+	HumanoidRootPart: {
+		RootAttachment: Attachment,
+		RootJoint: Motor6D,
+	} & Part,
+	Animate: {
+		idle: {
+			Animation1: {
+				Weight: NumberValue,
+			} & Animation,
+			Animation2: {
+				Weight: NumberValue,
+			} & Animation,
+		} & StringValue,
+		walk: {
+			WalkAnim: Animation,
+		} & StringValue,
+		run: {
+			RunAnim: Animation,
+		} & StringValue,
+		jump: {
+			JumpAnim: Animation,
+		} & StringValue,
+		climb: {
+			ClimbAnim: Animation,
+		} & StringValue,
+		toolnone: {
+			ToolNoneAnim: Animation,
+		} & StringValue,
+		fall: {
+			FallAnim: Animation,
+		} & StringValue,
+		sit: {
+			SitAnim: Animation,
+		} & StringValue,
+		PlayEmote: BindableFunction,
+		ScaleDampeningPercent: NumberValue,
+	} & LocalScript,
+	Body_Colors: BodyColors,
+} & Model
 
 --> LYNC BASE TYPES
 export type LyncConnection = { connected: boolean, disconnect: (self: LyncConnection) -> () }
+export type LyncPacketStats = { bytesSent: number, bytesReceived: number, fires: number, recvFires: number, drops: number }
 export type LyncPacket<T> = {
 	send: (self: LyncPacket<T>, data: T, target: any?) -> (),
 	on: (self: LyncPacket<T>, fn: (data: T, sender: Player?, timestamp: number?) -> ()) -> LyncConnection,
 	once: (self: LyncPacket<T>, fn: (data: T, sender: Player?, timestamp: number?) -> ()) -> LyncConnection,
 	wait: (self: LyncPacket<T>) -> (T, Player?, number?),
 	name: (self: LyncPacket<T>) -> string,
+	stats: (self: LyncPacket<T>) -> LyncPacketStats,
 }
 export type LyncQuery<Req, Resp> = {
-	request: (self: LyncQuery<Req, Resp>, data: Req) -> Resp,
-	onRequest: (self: LyncQuery<Req, Resp>, fn: (data: Req, sender: Player) -> Resp) -> LyncConnection,
+	handle: (self: LyncQuery<Req, Resp>, fn: (request: Req, player: Player?) -> Resp?) -> LyncConnection,
+	request: (self: LyncQuery<Req, Resp>, data: Req, target: any?) -> Resp?,
 	name: (self: LyncQuery<Req, Resp>) -> string,
+	stats: (self: LyncQuery<Req, Resp>) -> LyncPacketStats,
 }
+export type NetworkTarget = any
 
-export type Promise = {
-	getStatus: (self: Promise) -> Status,
-	cancel: (self: Promise) -> any,
-	tap: (self: Promise, onTap: (any) -> any) -> Promise,
-	andThenReturn: (self: Promise, _: any) -> Promise,
-	andThenCall: (self: Promise, callback: (...any) -> ...any, _: any) -> Promise,
-	finally: (self: Promise, onFinally: (status: Status) -> any) -> Promise,
-	finallyReturn: (self: Promise, _: any) -> Promise,
-	finallyCall: (self: Promise, callback: (...any) -> ...any, _: any) -> Promise,
-	awaitStatus: (self: Promise) -> (Status, ...any),
-	expect: (self: Promise) -> ...any,
-	now: (self: Promise, rejectionValue: any?) -> Promise,
-	timeout: (self: Promise, seconds: number, rejectionValue: any?) -> Promise,
-	await: (self: Promise) -> (boolean, ...any),
-	delay: (self: Promise, seconds: number) -> Promise,
-	is: (self: Promise, value: any) -> boolean,
-	onUnhandledRejection: (self: Promise, callback: (promise: PromiseLike, reason: any) -> ()) -> () -> (),
+export type PromiseStatus = "Pending" | "Fulfilled" | "Rejected" | "Cancelled"
+export type PromiseLike = Promise<any>
+export type Resolve<T> = (value: T | Promise<T>, ...any) -> ()
+export type Reject = (reason: any) -> ()
+export type OnCancel = (callback: () -> ()) -> ()
+export type Executor<T> = (resolve: Resolve<T>, reject: Reject, onCancel: OnCancel) -> ()
+export type Promise<T> = {
+	andThen: <U>(self: Promise<T>, onFulfilled: ((value: T) -> U | Promise<U>)?, onRejected: ((reason: any) -> U | Promise<U>)?) -> Promise<U>,
+	catch: <U>(self: Promise<T>, onRejected: (reason: any) -> U | Promise<U>) -> Promise<T | U>,
+	finally: (self: Promise<T>, onFinally: (status: PromiseStatus) -> any) -> Promise<T>,
+	tap: (self: Promise<T>, onTap: (value: T) -> any) -> Promise<T>,
+	andThenCall: <U>(self: Promise<T>, callback: (...any) -> U, ...any) -> Promise<U>,
+	andThenReturn: <U>(self: Promise<T>, value: U) -> Promise<U>,
+	finallyCall: (self: Promise<T>, callback: (...any) -> ...any, ...any) -> Promise<T>,
+	finallyReturn: <U>(self: Promise<T>, value: U) -> Promise<U>,
+	now: (self: Promise<T>, rejectionValue: any?) -> Promise<T>,
+	timeout: (self: Promise<T>, seconds: number, rejectionValue: any?) -> Promise<T>,
+	cancel: (self: Promise<T>) -> (),
+	getStatus: (self: Promise<T>) -> PromiseStatus,
+	awaitStatus: (self: Promise<T>) -> (PromiseStatus, T?),
+	expect: (self: Promise<T>) -> T,
+	await: (self: Promise<T>) -> (boolean, T?),
+}
+export type PromiseAPI = {
+	new: <T>(executor: Executor<T>) -> Promise<T>,
+	defer: <T>(executor: Executor<T>) -> Promise<T>,
+	resolve: <T>(value: T | Promise<T>) -> Promise<T>,
+	reject: <T>(reason: any) -> Promise<T>,
+	try: <T>(fn: (...any) -> T, ...any) -> Promise<T>,
+	promisify: <T>(callback: (...any) -> T) -> (...any) -> Promise<T>,
+	fromEvent: <T>(event: any, predicate: ((...any) -> boolean)?) -> Promise<T>,
+	delay: (seconds: number) -> Promise<number>,
+	all: <T>(promises: { Promise<T> }) -> Promise<{ T }>,
+	some: <T>(promises: { Promise<T> }, count: number) -> Promise<{ T }>,
+	race: <T>(promises: { Promise<T> }) -> Promise<T>,
+	any: <T>(promises: { Promise<T> }) -> Promise<T>,
+	allSettled: <T>(promises: { Promise<T> }) -> Promise<{ { status: "fulfilled", value: T } | { status: "rejected", reason: any } }>,
+	each: <T, U>(list: { T }, predicate: (value: T, index: number) -> U | Promise<U>) -> Promise<{ U }>,
+	fold: <T, U>(list: { T }, reducer: (acc: U, value: T, index: number) -> U | Promise<U>, initialValue: U) -> Promise<U>,
+	retry: <T>(callback: (...any) -> Promise<T>, times: number, ...any) -> Promise<T>,
+	retryWithDelay: <T>(callback: (...any) -> Promise<T>, times: number, seconds: number, ...any) -> Promise<T>,
+	is: (value: any) -> boolean,
+	onUnhandledRejection: (callback: (promise: PromiseLike, reason: any) -> ()) -> () -> (),
+	Status: { Pending: "Pending", Fulfilled: "Fulfilled", Rejected: "Rejected", Cancelled: "Cancelled" },
+	Error: any,
 }
 
 export type GlobalClock = {
 	GetTime: (self: GlobalClock) -> number,
-	GetSine: (self: GlobalClock, speed: number?, amplitude: number?, offset: number?) -> number,
+	GetSine: ((self: GlobalClock) -> number) & ((self: GlobalClock, speed: number?) -> number) & ((self: GlobalClock, speed: number?, amplitude: number?) -> number) & ((self: GlobalClock, speed: number?, amplitude: number?, offset: number?) -> number),
 	Lerp: (self: GlobalClock, a: number, b: number, t: number) -> number,
 }
 
-export type Signal = {
-	Connect: (self: Signal, callback: (...any) -> ()) -> (),
-	Fire: (self: Signal, _: any) -> any,
-	Wait: (self: Signal) -> any,
-	Block: (self: Signal) -> (),
-	Unblock: (self: Signal) -> (),
-	GetConnectionCount: (self: Signal) -> any,
-	DisconnectAll: (self: Signal) -> (),
-	new: (self: Signal) -> Signal,
+export type SignalConnection = {
+	Connected: boolean,
+	Disconnect: (self: SignalConnection) -> (),
+}
+export type Signal<T...> = {
+	Connect: (self: Signal<T...>, callback: (T...) -> ()) -> SignalConnection,
+	Fire: (self: Signal<T...>, T...) -> (),
+	Wait: (self: Signal<T...>) -> T...,
+	Block: (self: Signal<T...>) -> (),
+	Unblock: (self: Signal<T...>) -> (),
+	GetConnectionCount: (self: Signal<T...>) -> number,
+	DisconnectAll: (self: Signal<T...>) -> (),
+}
+export type SignalAPI = {
+	new: <T...>() -> Signal<T...>,
 }
 
 --> NETWORK PACKAGES (Lync)
 export type Network = {
 	Packages: {
-		Data: LyncPacket<{
-		Cash: number,
-		Lucky: number,
-		Vip: boolean,
-		DoubleCash: boolean,
-		Gamepasses: { [string]: boolean },
-		Item: { [string]: number },
-		UnlockedItems: { [number]: any },
-		UnlockedSkins: { [number]: any },
-		FirstLogin: boolean,
-		HasIncense: boolean,
-		Wins: number,
-		Losses: number,
-		CurrentZone: string,
-		LastSafeZone: string,
-		TotalFights: number,
-		TimeSpent: number,
-		RobuxSpent: number,
-		CashSpent: number,
-		ChestOpen: number,
-		SpinWheel: number,
-		MusicVolume: number,
-		SoundVolume: number,
-		SoundEnabled: boolean,
-		MusicEnabled: boolean
-	}>,
-		ZoneNotification: LyncPacket<{
-		Message: string
-	}>,
+		Data: LyncPacket<DataTemplate>,
 		DataKey: LyncPacket<DataKeyPayload>,
-	}
+		ZoneNotification: LyncPacket<{
+	Message: string,
+}>,
+		SecondsCycle: LyncPacket<{
+	Message: number,
+}>,
+		DayCycle: LyncPacket<{
+	Message: number,
+}>,
+		VitalKey: LyncPacket<{
+	key: "Armor",
+	value: number,
+}
+	| {
+	key: "Health",
+	value: number,
+}
+	| {
+	key: "Hunger",
+	value: number,
+}
+	| {
+	key: "Stamina",
+	value: number,
+}
+	| {
+	key: "Oxygen",
+	value: number,
+}
+	| {
+	key: "MaxOxygen",
+	value: number,
+}>,
+	},
+	all: NetworkTarget,
+}
+
+--> STARTERGUI TYPES
+export type UIWindowId = string
+export type ScreenGuiRoot = ScreenGui
+export type StarterGuiTypes = {
+	ScreenGui: ScreenGuiRoot,
+}
+
+--> COMPONENT INSTANCE TYPES
+
+export type MapComponentInstance = Folder & {
+	BookSpawns: Instance,
+	Bounds: Instance,
+	Shelves: Instance,
 }
 
 --> SERVICES, CONTROLLERS & COMPONENTS
+export type MapComponent = {
+	ID: string,
+	Type: Type,
+	CreateBook: (self: MapComponent, bookInfo: any) -> Model,
+	BuildBookPlan: (self: MapComponent, totalBooks: number) -> {Book},
+	GetTotalBooksForDifficulty: (self: MapComponent, Difficult: DifficultEnum.Difficults) -> number,
+	SpawnBooks: (self: MapComponent) -> any,
+	BookPlan: any,
+	ActiveBooks: any,
+	Extend: (self: MapComponent, id: string) -> MapComponent,
+	Import: ComponentImportFn,
+	OnInit: (self: MapComponent, cb: (self: MapComponent) -> ()) -> MapComponent,
+	OnStart: (self: MapComponent, cb: (self: MapComponent) -> ()) -> MapComponent,
+	OnTick: ((self: MapComponent, cb: (self: MapComponent, deltaTime: number) -> (), rate: number) -> MapComponent) & ((self: MapComponent, cb: (self: MapComponent, deltaTime: number) -> (), rate: number, priority: number?) -> MapComponent),
+	OnSimulation: ((self: MapComponent, cb: (self: MapComponent, deltaTime: number) -> ()) -> MapComponent) & ((self: MapComponent, cb: (self: MapComponent, deltaTime: number) -> (), frequency: Enum.StepFrequency?) -> MapComponent) & ((self: MapComponent, cb: (self: MapComponent, deltaTime: number) -> (), frequency: Enum.StepFrequency?, priority: number?) -> MapComponent),
+	OnDestroy: (self: MapComponent, cb: (self: MapComponent) -> ()) -> MapComponent,
+	Tag: (self: MapComponent, tag: string) -> MapComponent,
+	ClassName: (self: MapComponent, className: string) -> MapComponent,
+	AttributeDefaults: (self: MapComponent, schema: { [string]: any }) -> MapComponent,
+	Children: (self: MapComponent, children: { string }) -> MapComponent,
+	New: (self: MapComponent, ID: string, Type: Type) -> MapComponent,
+	GetComponent: GetComponentFn,
+	GetAllComponents: GetAllComponentsFn,
+	Cleanup: <T>(self: any, task: T) -> T,
+	Network: Network,
+	Promise: PromiseAPI,
+	GlobalClock: GlobalClock,
+	Signal: SignalAPI,
+	Attributes: { Difficulty: any, TimeLimit: number, MinBook: number },
+	Instance: MapComponentInstance,
+}
+
+export type MapService = {
+	ID: string,
+	Type: Type,
+	DebugService: DebugService,
+	Extend: (self: MapService, id: string) -> MapService,
+	Import: ServiceImportFn,
+	OnInit: (self: MapService, cb: (self: MapService) -> ()) -> MapService,
+	OnStart: (self: MapService, cb: (self: MapService) -> ()) -> MapService,
+	OnTick: ((self: MapService, cb: (self: MapService, deltaTime: number) -> (), rate: number) -> MapService) & ((self: MapService, cb: (self: MapService, deltaTime: number) -> (), rate: number, priority: number?) -> MapService),
+	OnSimulation: ((self: MapService, cb: (self: MapService, deltaTime: number) -> ()) -> MapService) & ((self: MapService, cb: (self: MapService, deltaTime: number) -> (), frequency: Enum.StepFrequency?) -> MapService) & ((self: MapService, cb: (self: MapService, deltaTime: number) -> (), frequency: Enum.StepFrequency?, priority: number?) -> MapService),
+	OnDestroy: (self: MapService, cb: (self: MapService) -> ()) -> MapService,
+	Tag: (self: MapService, tag: string) -> MapService,
+	ClassName: (self: MapService, className: string) -> MapService,
+	AttributeDefaults: (self: MapService, schema: { [string]: any }) -> MapService,
+	Children: (self: MapService, children: { string }) -> MapService,
+	New: (self: MapService, ID: string, Type: Type) -> MapService,
+	GetComponent: GetComponentFn,
+	GetAllComponents: GetAllComponentsFn,
+	Cleanup: <T>(self: any, task: T) -> T,
+	Network: Network,
+	Promise: PromiseAPI,
+	GlobalClock: GlobalClock,
+	Signal: SignalAPI,
+	Attributes: { [string]: any },
+}
+
 export type PlayerService = {
 	ID: string,
 	Type: Type,
@@ -113,95 +339,141 @@ export type PlayerService = {
 	OnPlayerRemoved: (self: PlayerService, callback: (Player: Player) -> ()) -> (),
 	OnCharacterAdded: (self: PlayerService, callback: (Character: R6, Player: Player) -> ()) -> (),
 	OnCharacterRemoved: (self: PlayerService, callback: (Character: R6, Player: Player) -> ()) -> (),
-	Extend: (self: PlayerService, id: "ProfileService") -> PlayerService,
+	Extend: (self: PlayerService, id: string) -> PlayerService,
 	Import: ServiceImportFn,
 	OnInit: (self: PlayerService, cb: (self: PlayerService) -> ()) -> PlayerService,
 	OnStart: (self: PlayerService, cb: (self: PlayerService) -> ()) -> PlayerService,
-	OnSimulation: (self: PlayerService, cb: (self: PlayerService) -> (), frequency: Enum.StepFrequency?, priority: number?) -> PlayerService,
+	OnTick: ((self: PlayerService, cb: (self: PlayerService, deltaTime: number) -> (), rate: number) -> PlayerService) & ((self: PlayerService, cb: (self: PlayerService, deltaTime: number) -> (), rate: number, priority: number?) -> PlayerService),
+	OnSimulation: ((self: PlayerService, cb: (self: PlayerService, deltaTime: number) -> ()) -> PlayerService) & ((self: PlayerService, cb: (self: PlayerService, deltaTime: number) -> (), frequency: Enum.StepFrequency?) -> PlayerService) & ((self: PlayerService, cb: (self: PlayerService, deltaTime: number) -> (), frequency: Enum.StepFrequency?, priority: number?) -> PlayerService),
 	OnDestroy: (self: PlayerService, cb: (self: PlayerService) -> ()) -> PlayerService,
 	Tag: (self: PlayerService, tag: string) -> PlayerService,
 	ClassName: (self: PlayerService, className: string) -> PlayerService,
 	AttributeDefaults: (self: PlayerService, schema: { [string]: any }) -> PlayerService,
 	Children: (self: PlayerService, children: { string }) -> PlayerService,
-	GetAllComponents: (self: PlayerService, id: string) -> any,
-	GetComponent: (self: PlayerService, instance: Instance, id: string) -> any,
-	_doCleanup: (self: PlayerService) -> (),
 	New: (self: PlayerService, ID: string, Type: Type) -> PlayerService,
+	GetComponent: GetComponentFn,
+	GetAllComponents: GetAllComponentsFn,
 	Cleanup: <T>(self: any, task: T) -> T,
 	Network: Network,
-	Promise: Promise,
+	Promise: PromiseAPI,
 	GlobalClock: GlobalClock,
-	Signal: Signal,
+	Signal: SignalAPI,
 	Attributes: { [string]: any },
 }
 
 export type ProfileService = {
 	ID: string,
 	Type: Type,
-	OnPlayerAdded: (self: ProfileService, callback: (Player: Player) -> ()) -> (),
-	OnPlayerRemoved: (self: ProfileService, callback: (Player: Player) -> ()) -> (),
-	OnCharacterAdded: (self: ProfileService, callback: (Character: R6, Player: Player) -> ()) -> (),
-	OnCharacterRemoved: (self: ProfileService, callback: (Character: R6, Player: Player) -> ()) -> (),
-	_setupProfile: (self: ProfileService, Player: Player) -> any,
+	PlayerService: PlayerService,
 	Set: (self: ProfileService, Player: Player, Key: DataTemplateKey, value: any) -> any | nil,
 	ReplicateKey: (self: ProfileService, Player: Player, Key: DataTemplateKey) -> (),
 	Replicate: (self: ProfileService, Player: Player) -> any,
 	GetData: (self: ProfileService, Player: Player) -> DataTemplate?,
+	PrintData: boolean,
 	Profiles: { [Player]: any },
-	OnUpdateData: Signal,
-	OnUpdateKey: Signal,
-	Extend: (self: ProfileService, id: "PlayerService") -> ProfileService,
+	OnUpdateData: Signal<Player, DataTemplate>,
+	OnUpdateKey: Signal<Player, DataTemplateKey, any>,
+	Extend: (self: ProfileService, id: string) -> ProfileService,
 	Import: ServiceImportFn,
 	OnInit: (self: ProfileService, cb: (self: ProfileService) -> ()) -> ProfileService,
 	OnStart: (self: ProfileService, cb: (self: ProfileService) -> ()) -> ProfileService,
-	OnSimulation: (self: ProfileService, cb: (self: ProfileService) -> (), frequency: Enum.StepFrequency?, priority: number?) -> ProfileService,
+	OnTick: ((self: ProfileService, cb: (self: ProfileService, deltaTime: number) -> (), rate: number) -> ProfileService) & ((self: ProfileService, cb: (self: ProfileService, deltaTime: number) -> (), rate: number, priority: number?) -> ProfileService),
+	OnSimulation: ((self: ProfileService, cb: (self: ProfileService, deltaTime: number) -> ()) -> ProfileService) & ((self: ProfileService, cb: (self: ProfileService, deltaTime: number) -> (), frequency: Enum.StepFrequency?) -> ProfileService) & ((self: ProfileService, cb: (self: ProfileService, deltaTime: number) -> (), frequency: Enum.StepFrequency?, priority: number?) -> ProfileService),
 	OnDestroy: (self: ProfileService, cb: (self: ProfileService) -> ()) -> ProfileService,
 	Tag: (self: ProfileService, tag: string) -> ProfileService,
 	ClassName: (self: ProfileService, className: string) -> ProfileService,
 	AttributeDefaults: (self: ProfileService, schema: { [string]: any }) -> ProfileService,
 	Children: (self: ProfileService, children: { string }) -> ProfileService,
-	GetAllComponents: (self: ProfileService, id: string) -> any,
-	GetComponent: (self: ProfileService, instance: Instance, id: string) -> any,
-	_doCleanup: (self: ProfileService) -> (),
 	New: (self: ProfileService, ID: string, Type: Type) -> ProfileService,
+	GetComponent: GetComponentFn,
+	GetAllComponents: GetAllComponentsFn,
 	Cleanup: <T>(self: any, task: T) -> T,
 	Network: Network,
-	Promise: Promise,
+	Promise: PromiseAPI,
 	GlobalClock: GlobalClock,
-	Signal: Signal,
+	Signal: SignalAPI,
+	Attributes: { [string]: any },
+}
+
+export type DebugService = {
+	ID: string,
+	Type: Type,
+	Panic: (self: DebugService, Origin: string, Mensage: string) -> (),
+	Extend: (self: DebugService, id: string) -> DebugService,
+	Import: ServiceImportFn,
+	OnInit: (self: DebugService, cb: (self: DebugService) -> ()) -> DebugService,
+	OnStart: (self: DebugService, cb: (self: DebugService) -> ()) -> DebugService,
+	OnTick: ((self: DebugService, cb: (self: DebugService, deltaTime: number) -> (), rate: number) -> DebugService) & ((self: DebugService, cb: (self: DebugService, deltaTime: number) -> (), rate: number, priority: number?) -> DebugService),
+	OnSimulation: ((self: DebugService, cb: (self: DebugService, deltaTime: number) -> ()) -> DebugService) & ((self: DebugService, cb: (self: DebugService, deltaTime: number) -> (), frequency: Enum.StepFrequency?) -> DebugService) & ((self: DebugService, cb: (self: DebugService, deltaTime: number) -> (), frequency: Enum.StepFrequency?, priority: number?) -> DebugService),
+	OnDestroy: (self: DebugService, cb: (self: DebugService) -> ()) -> DebugService,
+	Tag: (self: DebugService, tag: string) -> DebugService,
+	ClassName: (self: DebugService, className: string) -> DebugService,
+	AttributeDefaults: (self: DebugService, schema: { [string]: any }) -> DebugService,
+	Children: (self: DebugService, children: { string }) -> DebugService,
+	New: (self: DebugService, ID: string, Type: Type) -> DebugService,
+	GetComponent: GetComponentFn,
+	GetAllComponents: GetAllComponentsFn,
+	Cleanup: <T>(self: any, task: T) -> T,
+	Network: Network,
+	Promise: PromiseAPI,
+	GlobalClock: GlobalClock,
+	Signal: SignalAPI,
 	Attributes: { [string]: any },
 }
 
 --> IMPORT FUNCTIONS
 
-export type ServiceImportFn =
-	((self: any, id: "PlayerService", scopeKey: string?) -> PlayerService) &
-	((self: any, id: "ProfileService", scopeKey: string?) -> ProfileService)
+export type ImportFn = <Self>(self: Self, id: string, scopeKey: string?) -> Self
 
-export type ControllerImportFn = (self: any, id: string, scopeKey: string?) -> any
+export type ServiceImportFn =
+	(<Self>(self: Self, id: "MapService", scopeKey: string?) -> Self) &
+	(<Self>(self: Self, id: "PlayerService", scopeKey: string?) -> Self) &
+	(<Self>(self: Self, id: "ProfileService", scopeKey: string?) -> Self) &
+	(<Self>(self: Self, id: "DebugService", scopeKey: string?) -> Self)
+
+export type ControllerImportFn = <Self>(self: Self, id: string, scopeKey: string?) -> Self
 
 export type ComponentImportFn =
-	((self: any, id: "PlayerService", scopeKey: string?) -> PlayerService) &
-	((self: any, id: "ProfileService", scopeKey: string?) -> ProfileService)
+	(<Self>(self: Self, id: "MapService", scopeKey: string?) -> Self) &
+	(<Self>(self: Self, id: "PlayerService", scopeKey: string?) -> Self) &
+	(<Self>(self: Self, id: "ProfileService", scopeKey: string?) -> Self) &
+	(<Self>(self: Self, id: "DebugService", scopeKey: string?) -> Self)
 
 --> EXTEND FUNCTIONS
 
-export type ServiceExtendFn =
-	((self: any, id: "PlayerService") -> PlayerService) &
-	((self: any, id: "ProfileService") -> ProfileService)
+export type ExtendFn = <Self>(self: Self, id: string) -> Self
 
-export type ControllerExtendFn = (self: any, id: string) -> any
+export type ServiceExtendFn = <Self>(self: Self, id: string) -> Self
 
-export type ComponentExtendFn = (self: any, id: string) -> any
+export type ControllerExtendFn = <Self>(self: Self, id: string) -> Self
+
+export type ComponentExtendFn = <Self>(self: Self, id: string) -> Self
+
+export type MixinExtendFn = <Self>(self: Self, id: string) -> Self
+
+--> COMPONENT LOOKUP FUNCTIONS
+
+export type GetComponentFn =
+	(<Self>(self: Self, instance: MapComponentInstance, id: "MapComponent") -> MapComponent?) &
+	(<Self>(self: Self, instance: Instance, id: string) -> any)
+
+export type GetAllComponentsFn =
+	(<Self>(self: Self, id: "MapComponent") -> { MapComponent }) &
+	(<Self>(self: Self, id: string) -> { any })
 
 --> MODUX OVERLOADS
 export type ServiceFn =
+	((id: "MapService", mode: Mode?) -> MapService) &
 	((id: "PlayerService", mode: Mode?) -> PlayerService) &
-	((id: "ProfileService", mode: Mode?) -> ProfileService)
+	((id: "ProfileService", mode: Mode?) -> ProfileService) &
+	((id: "DebugService", mode: Mode?) -> DebugService)
 
 export type ControllerFn = (id: string, mode: Mode?) -> any
 
-export type ComponentFn = (id: string, mode: Mode?) -> any
+export type ComponentFn =
+	((id: "MapComponent", mode: Mode?) -> MapComponent)
+
+export type MixinFn = (id: string, mode: Mode?) -> any
 
 -- END AUTO-GENERATED
 

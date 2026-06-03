@@ -1,20 +1,21 @@
-local FileSyncReplicationService = game:GetService("FileSyncReplicationService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Modux = require(ReplicatedStorage.Shared.Modux)
+local Types = require(ReplicatedStorage.Shared.Modux.Types)
 local ProfileTemplate = require(ReplicatedStorage.Shared.Templates.Profile)
 local ProfileStorePackage = require(script.Profile)
 local PlayerStore = ProfileStorePackage.New("Data_001", ProfileTemplate.Template)
 
 export type DataTemplate = typeof(ProfileTemplate.Template)
+type DataTemplateKey = Types.DataTemplateKey
 
 local ProfileService = Modux.Service("ProfileService")
-ProfileService:Extend("PlayerService")
+ProfileService:Import("PlayerService")
 
-ProfileService.PrintData = FileSyncReplicationService
+ProfileService.PrintData = true
 ProfileService.Profiles = {} :: { [Player]: any }
-ProfileService.OnUpdateData = ProfileService.Signal.new()
-ProfileService.OnUpdateKey = ProfileService.Signal.new()
-ProfileService._profileLoadedSignal = ProfileService.Signal.new()
+ProfileService.OnUpdateData = ProfileService.Signal.new() :: Types.Signal<Player, DataTemplate>
+ProfileService.OnUpdateKey = ProfileService.Signal.new() :: Types.Signal<Player, DataTemplateKey, any>
+ProfileService._profileLoadedSignal = ProfileService.Signal.new() :: Types.Signal<Player, DataTemplate>
 ProfileService._replicateCooldown = {}
 ProfileService._replicatePending = {}
 ProfileService._replicateKeyCooldown = {} :: { [Player]: { [string]: boolean } }
@@ -22,8 +23,6 @@ ProfileService._replicateKeyPending = {} :: { [Player]: { [string]: boolean } }
 
 ProfileService._setupProfile = function(self, Player)
 	local Players = game:GetService("Players")
-	local ServerScriptService = game:GetService("ServerScriptService")
-	local _profilestore = require(ServerScriptService.ServerPackages.profilestore)
 	local profile = PlayerStore:StartSessionAsync(`{Player.UserId}`, {
 		Cancel = function()
 			return Player.Parent ~= Players
@@ -75,7 +74,6 @@ end
 -- Replica apenas uma key específica do perfil para o player.
 ProfileService.ReplicateKey = function(self, Player: Player, Key: DataTemplateKey)
 	assert(Player, "[ProfileService] Player ausente no ReplicateKey")
-	assert(type(Key) == "string" and Key ~= "", "[ProfileService] Key inválida no ReplicateKey")
 
 	if not ProfileService._replicateKeyCooldown[Player] then
 		ProfileService._replicateKeyCooldown[Player] = {}
@@ -137,7 +135,7 @@ ProfileService.Replicate = function(self, Player: Player)
 			task.delay(0.5, function()
 				ProfileService._replicatePending[Player] = nil
 				if Player and Player.Parent then
-					ProfileService.Replicate(Player)
+					ProfileService.Replicate(self, Player)
 				end
 			end)
 		end
@@ -159,7 +157,7 @@ ProfileService.Replicate = function(self, Player: Player)
 			Player:SetAttribute(name, value)
 		end
 	end
-	--self.Network.Packages.Data:send(profile, Player)
+	self.Network.Packages.Data:send(profile, Player)
 end
 -- Retorna uma Promise que resolve com os dados do player.
 -- Se o dado já existir, resolve instantaneamente.
@@ -197,13 +195,13 @@ ProfileService.GetData = function(self, Player: Player): DataTemplate?
 end
 
 ProfileService:OnInit(function(self)
-	self:OnPlayerAdded(function(Player: Player)
+	self.PlayerService:OnPlayerAdded(function(Player: Player)
 		self:_setupProfile(Player)
 		self:Replicate(Player)
 		self:ReplicateKey(Player, "Cash")
 	end)
 
-	self:OnPlayerRemoved(function(Player: Player)
+	self.PlayerService:OnPlayerRemoved(function(Player: Player)
 		local profile = ProfileService.Profiles[Player]
 		if profile ~= nil then
 			profile:EndSession()
@@ -217,12 +215,5 @@ ProfileService:OnInit(function(self)
 		ProfileService._replicateKeyPending[Player] = nil
 	end)
 end)
-
-export type DataTemplateKey =
-	"Level"
-	| "MusicVolume"
-	| "SoundVolume"
-	| "MusicEnabled"
-	| "SoundEnabled"
 
 return ProfileService
