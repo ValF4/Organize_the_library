@@ -7,6 +7,7 @@ return {
 	},
 	Server = {
 		"Components.MapComponent",
+		"Services.CharacterService",
 		"Services.MapService",
 		"Services.PlayerService",
 		"Services.ProfileService",

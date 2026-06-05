@@ -17,11 +17,11 @@ export type DataTemplate = {
 }
 export type DataTemplateKey = "Cash" | "MusicVolume" | "SoundVolume" | "MusicEnabled" | "SoundEnabled"
 export type DataKeyPayload =
-	{ key: "Cash", Cash: number }
-	| { key: "MusicVolume", MusicVolume: number }
-	| { key: "SoundVolume", SoundVolume: number }
-	| { key: "MusicEnabled", MusicEnabled: boolean }
-	| { key: "SoundEnabled", SoundEnabled: boolean }
+	{ key: "Cash", value: number }
+	| { key: "MusicVolume", value: number }
+	| { key: "SoundVolume", value: number }
+	| { key: "MusicEnabled", value: boolean }
+	| { key: "SoundEnabled", value: boolean }
 export type BookThemes = "Romance" | "Action" | "Physic" | "Comedy"
 export type Books = {
     Id: string,
@@ -137,6 +137,10 @@ export type LyncPacket<T> = {
 	wait: (self: LyncPacket<T>) -> (T, Player?, number?),
 	name: (self: LyncPacket<T>) -> string,
 	stats: (self: LyncPacket<T>) -> LyncPacketStats,
+}
+export type LyncKeyedPacket<Payload, Key, Value> = LyncPacket<Payload> & {
+	sendKey: (self: LyncKeyedPacket<Payload, Key, Value>, key: Key, value: Value, target: any?) -> (),
+	onKey: (self: LyncKeyedPacket<Payload, Key, Value>, fn: (key: Key, value: Value, sender: Player?, timestamp: number?) -> ()) -> LyncConnection,
 }
 export type LyncQuery<Req, Resp> = {
 	handle: (self: LyncQuery<Req, Resp>, fn: (request: Req, player: Player?) -> Resp?) -> LyncConnection,
@@ -267,21 +271,17 @@ export type StarterGuiTypes = {
 
 --> COMPONENT INSTANCE TYPES
 
-export type MapComponentInstance = Folder & {
-	BookSpawns: Instance,
-	Bounds: Instance,
-	Shelves: Instance,
-}
+export type MapComponentInstance = Instance
 
 --> SERVICES, CONTROLLERS & COMPONENTS
 export type MapComponent = {
 	ID: string,
 	Type: Type,
-	CreateBook: (self: MapComponent, bookInfo: any) -> Model,
+	CreateBook: (self: MapComponent, bookInfo: Book) -> Model?,
 	BuildBookPlan: (self: MapComponent, totalBooks: number) -> {Book},
 	GetTotalBooksForDifficulty: (self: MapComponent, Difficult: DifficultEnum.Difficults) -> number,
 	SpawnBooks: (self: MapComponent) -> any,
-	BookPlan: any,
+	BookPlan: {Book},
 	ActiveBooks: any,
 	Extend: (self: MapComponent, id: string) -> MapComponent,
 	Import: ComponentImportFn,
@@ -302,8 +302,34 @@ export type MapComponent = {
 	Promise: PromiseAPI,
 	GlobalClock: GlobalClock,
 	Signal: SignalAPI,
-	Attributes: { Difficulty: any, TimeLimit: number, MinBook: number },
+	Attributes: { Difficulty: string, TimeLimit: number, MinBook: number },
 	Instance: MapComponentInstance,
+}
+
+export type CharacterService = {
+	ID: string,
+	Type: Type,
+	PlayerService: PlayerService,
+	Extend: (self: CharacterService, id: string) -> CharacterService,
+	Import: ServiceImportFn,
+	OnInit: (self: CharacterService, cb: (self: CharacterService) -> ()) -> CharacterService,
+	OnStart: (self: CharacterService, cb: (self: CharacterService) -> ()) -> CharacterService,
+	OnTick: ((self: CharacterService, cb: (self: CharacterService, deltaTime: number) -> (), rate: number) -> CharacterService) & ((self: CharacterService, cb: (self: CharacterService, deltaTime: number) -> (), rate: number, priority: number?) -> CharacterService),
+	OnSimulation: ((self: CharacterService, cb: (self: CharacterService, deltaTime: number) -> ()) -> CharacterService) & ((self: CharacterService, cb: (self: CharacterService, deltaTime: number) -> (), frequency: Enum.StepFrequency?) -> CharacterService) & ((self: CharacterService, cb: (self: CharacterService, deltaTime: number) -> (), frequency: Enum.StepFrequency?, priority: number?) -> CharacterService),
+	OnDestroy: (self: CharacterService, cb: (self: CharacterService) -> ()) -> CharacterService,
+	Tag: (self: CharacterService, tag: string) -> CharacterService,
+	ClassName: (self: CharacterService, className: string) -> CharacterService,
+	AttributeDefaults: (self: CharacterService, schema: { [string]: any }) -> CharacterService,
+	Children: (self: CharacterService, children: { string }) -> CharacterService,
+	New: (self: CharacterService, ID: string, Type: Type) -> CharacterService,
+	GetComponent: GetComponentFn,
+	GetAllComponents: GetAllComponentsFn,
+	Cleanup: <T>(self: any, task: T) -> T,
+	Network: Network,
+	Promise: PromiseAPI,
+	GlobalClock: GlobalClock,
+	Signal: SignalAPI,
+	Attributes: { [string]: any },
 }
 
 export type MapService = {
@@ -339,6 +365,10 @@ export type PlayerService = {
 	OnPlayerRemoved: (self: PlayerService, callback: (Player: Player) -> ()) -> (),
 	OnCharacterAdded: (self: PlayerService, callback: (Character: R6, Player: Player) -> ()) -> (),
 	OnCharacterRemoved: (self: PlayerService, callback: (Character: R6, Player: Player) -> ()) -> (),
+	GetAllPlayers: (self: PlayerService) -> { Player },
+	GetAllCharacters: (self: PlayerService) -> { R6 },
+	allPlayers: { [number]: Player },
+	allCharacters: { [number]: R6 },
 	Extend: (self: PlayerService, id: string) -> PlayerService,
 	Import: ServiceImportFn,
 	OnInit: (self: PlayerService, cb: (self: PlayerService) -> ()) -> PlayerService,
@@ -426,6 +456,7 @@ export type DebugService = {
 export type ImportFn = <Self>(self: Self, id: string, scopeKey: string?) -> Self
 
 export type ServiceImportFn =
+	(<Self>(self: Self, id: "CharacterService", scopeKey: string?) -> Self) &
 	(<Self>(self: Self, id: "MapService", scopeKey: string?) -> Self) &
 	(<Self>(self: Self, id: "PlayerService", scopeKey: string?) -> Self) &
 	(<Self>(self: Self, id: "ProfileService", scopeKey: string?) -> Self) &
@@ -434,6 +465,7 @@ export type ServiceImportFn =
 export type ControllerImportFn = <Self>(self: Self, id: string, scopeKey: string?) -> Self
 
 export type ComponentImportFn =
+	(<Self>(self: Self, id: "CharacterService", scopeKey: string?) -> Self) &
 	(<Self>(self: Self, id: "MapService", scopeKey: string?) -> Self) &
 	(<Self>(self: Self, id: "PlayerService", scopeKey: string?) -> Self) &
 	(<Self>(self: Self, id: "ProfileService", scopeKey: string?) -> Self) &
@@ -463,6 +495,7 @@ export type GetAllComponentsFn =
 
 --> MODUX OVERLOADS
 export type ServiceFn =
+	((id: "CharacterService", mode: Mode?) -> CharacterService) &
 	((id: "MapService", mode: Mode?) -> MapService) &
 	((id: "PlayerService", mode: Mode?) -> PlayerService) &
 	((id: "ProfileService", mode: Mode?) -> ProfileService) &

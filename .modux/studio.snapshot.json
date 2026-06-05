@@ -1,0 +1,20 @@
+{
+  "protocolVersion": 1,
+  "workspaceHash": "17f062004d2482280715440a0803d1e6c1a5198268f861aa951222e296dfe3df",
+  "contractHash": "0212220516fee1599deb08ef06dc94edcd4e4a4b0e989f4c3346d442143f9fe0",
+  "generatedAt": "2026-06-04T16:11:33Z",
+  "place": {
+    "id": 103439407137469,
+    "name": "Organize a biblioteca"
+  },
+  "components": [
+    {
+      "id": "MapComponent",
+      "tag": "Map",
+      "instances": []
+    }
+  ],
+  "starterGui": {
+    "screens": []
+  }
+}

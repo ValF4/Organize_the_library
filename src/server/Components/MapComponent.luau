@@ -18,6 +18,8 @@ local MAX_STACK_HEIGHT = 8
 local STACK_HEIGHT_PADDING = 0.08
 local STACK_OFFSET_JITTER = 0.45
 
+local COLLITION_BOOK_GROUP = "BookGroup"
+
 local MapComponent = Modux.Component("MapComponent")
     :Tag("Map")
     :ClassName("Instance")
@@ -63,6 +65,21 @@ local function CopyBook(book: Book): Book
     end
 
     return copy :: Book
+end
+
+local function ConfigureStaticBookModel(book: Model)
+    for _, descendant in book:GetDescendants() do
+        if descendant:IsA("BasePart") then
+            descendant.Anchored = false
+            descendant.CanCollide = true
+            descendant.CanTouch = false
+            descendant.CanQuery = true
+            descendant.CastShadow = false
+            descendant.CollisionGroup = COLLITION_BOOK_GROUP
+            descendant.AssemblyLinearVelocity = Vector3.zero
+            descendant.AssemblyAngularVelocity = Vector3.zero
+        end
+    end
 end
 
 local function GetRandomLocalPointInArea(area: BasePart): Vector3
@@ -183,6 +200,7 @@ function MapComponent:CreateBook(bookInfo: Book): Model?
     Book:SetAttribute("Theme", bookInfo.Theme)
     Book:SetAttribute("Chapter", bookInfo.Chapter)
     Book:SetAttribute("TotalChapters", bookInfo.TotalChapters)
+    ConfigureStaticBookModel(Book)
 
     return Book
 end
